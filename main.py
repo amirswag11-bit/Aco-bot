@@ -45,7 +45,11 @@ class OrderModal(discord.ui.Modal, title="Food Order Information"):
             }
         )
 
-        embed = discord.Embed(title="📦 New Order Ticket", color=discord.Color.green())
+        # ---------- EMBED ----------
+        embed = discord.Embed(
+            title="📦 New Order Ticket",
+            color=discord.Color.green()
+        )
         embed.add_field(name="Name", value=self.name.value, inline=False)
         embed.add_field(name="Phone Number", value=self.phone.value, inline=False)
         embed.add_field(name="Restaurant", value=self.restaurant.value, inline=False)
@@ -53,8 +57,23 @@ class OrderModal(discord.ui.Modal, title="Food Order Information"):
         embed.add_field(name="Order Subtotal", value=f"${self.subtotal.value}", inline=False)
         embed.set_footer(text=f"User ID: {interaction.user.id}")
 
+        # ---------- COPYABLE TEXT ----------
+        copy_text = f"""
+Name: {self.name.value}
+Phone: {self.phone.value}
+Restaurant: {self.restaurant.value}
+Address: {self.address.value}
+Subtotal: ${self.subtotal.value}
+User ID: {interaction.user.id}
+"""
+
         await channel.send(
-            content=f"{interaction.user.mention}\nPlease upload **image(s) of your cart)** ⬇️",
+            content=(
+                f"{interaction.user.mention}\n"
+                f"Please upload **image(s) of your cart)** ⬇️\n\n"
+                f"📋 **Copyable Order Info:**\n"
+                f"```{copy_text.strip()}```"
+            ),
             embed=embed
         )
 
@@ -73,11 +92,18 @@ class TicketView(discord.ui.View):
         style=discord.ButtonStyle.green,
         custom_id="create_order_ticket"
     )
-    async def create_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def create_ticket(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button
+    ):
         await interaction.response.send_modal(OrderModal())
 
 # ---------- /ADD ----------
-@bot.tree.command(name="add", description="Send the order ticket button")
+@bot.tree.command(
+    name="add",
+    description="Send the order ticket button"
+)
 @app_commands.checks.has_permissions(administrator=True)
 async def add(interaction: discord.Interaction):
     embed = discord.Embed(
@@ -86,10 +112,16 @@ async def add(interaction: discord.Interaction):
         color=discord.Color.blue()
     )
     await interaction.channel.send(embed=embed, view=TicketView())
-    await interaction.response.send_message("✅ Ticket panel sent.", ephemeral=True)
+    await interaction.response.send_message(
+        "✅ Ticket panel sent.",
+        ephemeral=True
+    )
 
 # ---------- /CLOSE ----------
-@bot.tree.command(name="close", description="Close this ticket and save transcript")
+@bot.tree.command(
+    name="close",
+    description="Close this ticket and save transcript"
+)
 @app_commands.checks.has_permissions(administrator=True)
 async def close(interaction: discord.Interaction):
 
@@ -102,7 +134,9 @@ async def close(interaction: discord.Interaction):
         )
         return
 
-    await interaction.response.send_message("📄 Saving transcript and closing ticket...")
+    await interaction.response.send_message(
+        "📄 Saving transcript and closing ticket..."
+    )
 
     messages = []
     async for msg in channel.history(limit=None, oldest_first=True):
