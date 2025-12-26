@@ -57,22 +57,18 @@ class OrderModal(discord.ui.Modal, title="Food Order Information"):
         embed.add_field(name="Order Subtotal", value=f"${self.subtotal.value}", inline=False)
         embed.set_footer(text=f"User ID: {interaction.user.id}")
 
-        # ---------- COPYABLE TEXT ----------
-        copy_text = f"""
-Name: {self.name.value}
-Phone: {self.phone.value}
-Restaurant: {self.restaurant.value}
-Address: {self.address.value}
-Subtotal: ${self.subtotal.value}
-User ID: {interaction.user.id}
-"""
-
+        # ---------- INLINE COPYABLE TEXT ----------
         await channel.send(
             content=(
                 f"{interaction.user.mention}\n"
                 f"Please upload **image(s) of your cart)** ⬇️\n\n"
-                f"📋 **Copyable Order Info:**\n"
-                f"```{copy_text.strip()}```"
+                f"📋 **Order Info:**\n"
+                f"• **Name:** `{self.name.value}`\n"
+                f"• **Phone:** `{self.phone.value}`\n"
+                f"• **Restaurant:** `{self.restaurant.value}`\n"
+                f"• **Address:** `{self.address.value}`\n"
+                f"• **Subtotal:** `${self.subtotal.value}`\n"
+                f"• **User ID:** `{interaction.user.id}`"
             ),
             embed=embed
         )
@@ -92,18 +88,11 @@ class TicketView(discord.ui.View):
         style=discord.ButtonStyle.green,
         custom_id="create_order_ticket"
     )
-    async def create_ticket(
-        self,
-        interaction: discord.Interaction,
-        button: discord.ui.Button
-    ):
+    async def create_ticket(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.send_modal(OrderModal())
 
 # ---------- /ADD ----------
-@bot.tree.command(
-    name="add",
-    description="Send the order ticket button"
-)
+@bot.tree.command(name="add", description="Send the order ticket button")
 @app_commands.checks.has_permissions(administrator=True)
 async def add(interaction: discord.Interaction):
     embed = discord.Embed(
@@ -112,16 +101,10 @@ async def add(interaction: discord.Interaction):
         color=discord.Color.blue()
     )
     await interaction.channel.send(embed=embed, view=TicketView())
-    await interaction.response.send_message(
-        "✅ Ticket panel sent.",
-        ephemeral=True
-    )
+    await interaction.response.send_message("✅ Ticket panel sent.", ephemeral=True)
 
 # ---------- /CLOSE ----------
-@bot.tree.command(
-    name="close",
-    description="Close this ticket and save transcript"
-)
+@bot.tree.command(name="close", description="Close this ticket and save transcript")
 @app_commands.checks.has_permissions(administrator=True)
 async def close(interaction: discord.Interaction):
 
@@ -134,19 +117,14 @@ async def close(interaction: discord.Interaction):
         )
         return
 
-    await interaction.response.send_message(
-        "📄 Saving transcript and closing ticket..."
-    )
+    await interaction.response.send_message("📄 Saving transcript and closing ticket...")
 
     messages = []
     async for msg in channel.history(limit=None, oldest_first=True):
         timestamp = msg.created_at.strftime("%Y-%m-%d %H:%M")
         content = msg.content if msg.content else ""
         attachments = " ".join(a.url for a in msg.attachments)
-
-        messages.append(
-            f"[{timestamp}] {msg.author}: {content} {attachments}"
-        )
+        messages.append(f"[{timestamp}] {msg.author}: {content} {attachments}")
 
     transcript_text = "\n".join(messages)
     filename = f"transcript-{channel.name}-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}.txt"
